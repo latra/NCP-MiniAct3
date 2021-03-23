@@ -20,9 +20,20 @@ import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.Dash;
+import com.google.android.gms.maps.model.Dot;
+import com.google.android.gms.maps.model.Gap;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PatternItem;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 
@@ -31,6 +42,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.widget.Toast;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * This demo shows how GMS Location can be used to check for changes to the users location.  The
@@ -45,6 +59,7 @@ public class MapsActivity extends AppCompatActivity
         OnMapReadyCallback,
         ActivityCompat.OnRequestPermissionsResultCallback {
 
+    Circle circle;
     /**
      * Request code for location permission request.
      *
@@ -59,6 +74,8 @@ public class MapsActivity extends AppCompatActivity
     private boolean permissionDenied = false;
 
     private GoogleMap map;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,17 +116,22 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public boolean onMyLocationButtonClick() {
         Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT).show();
-        // Return false so that we don't consume the event and the default behavior still occurs
-        // (the camera animates to the user's current position).
         return false;
     }
 
     @Override
     public void onMyLocationClick(@NonNull Location location) {
+        if (circle != null) {
+            circle.remove();
+        }
         Toast.makeText(this, "Current location:\n" + location, Toast.LENGTH_LONG).show();
+        circle = map.addCircle(new CircleOptions()
+                .center(new LatLng(location.getLatitude(), location.getLongitude()))
+                .radius(750)
+                .strokeWidth(10)
+                .strokeColor(Color.BLUE));
     }
 
-    // [START maps_check_location_permission_result]
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
@@ -117,17 +139,11 @@ public class MapsActivity extends AppCompatActivity
         }
 
         if (PermissionUtils.isPermissionGranted(permissions, grantResults, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            // Enable the my location layer if the permission has been granted.
             enableMyLocation();
         } else {
-            // Permission was denied. Display an error message
-            // [START_EXCLUDE]
-            // Display the missing permission error dialog when the fragments resume.
             permissionDenied = true;
-            // [END_EXCLUDE]
         }
     }
-    // [END maps_check_location_permission_result]
 
     @Override
     protected void onResumeFragments() {
